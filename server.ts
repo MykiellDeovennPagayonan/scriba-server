@@ -1,11 +1,12 @@
 import express from "express";
 import generateAccessToken from "./utils/generateAccessToken";
 import cors from "cors"
+import { Request, Response } from 'express'
 import { Client } from "pg"
 import * as dotenv from "dotenv";
-import { compare } from "bcrypt";
+import { compare, hash } from "bcrypt";
 
-dotenv.config({ path: "/.env" });
+dotenv.config({ path: ".env" });
 
 const app = express();
 
@@ -18,42 +19,65 @@ const client = new Client({
 });
 
 async function startServer() {
-
+  await client.connect();
 
   app
     .use(cors())
     .use(express.json())
-    .get("/api/burgers", (req, res) => {
-      res.json({ burger: "delicious" });
-    })
-    .post("/api/auth/login",  async (request, response) => {
+    .post("/api/auth/login",  async (req : Request, res : Response) => {
+      const { email, password } = req.body
+      
       try {
-        const { email, password } = await request.json();
-        console.log(password)
     
         const response = await client.query(`
-        SELECT * FROM users WHERE email = ${email}
-        `)
+        SELECT * FROM users WHERE email = $1
+        `, [email])
         
         const user = response.rows[0];
     
         if (response.rows.length === 0) {
-          response.json({ message: "email or password is incorrect"})
+          res.json({ message: "email or password is incorrect"})
         }
     
         const correctPassword = await compare(password, user.password);
     
         if (!correctPassword) {
-          response.json({ message: "email or password is incorrect"})
+          res.json({ message: "email or password is incorrect"})
         }
     
-        const token = generateAccessToken({ email, password, })
+        const token = generateAccessToken(email)
     
         console.log(token);
-        return response.json({ token: token });
+        return res.json({ token: token });
       } catch (error) {
         console.log("Error:", error);
-        return response.json({ message: "failure", error: error });
+        return res.json({ message: "failure", error: error });
+      }
+    })
+    .post("/api/auth/register", async (req : Request, res : Response) => {
+      const { userName, email, password } = req.body
+
+      console.log(req.body)
+      try {
+    
+        const hashedPassword = await hash(password, 10)
+
+        console.log(hashedPassword)
+        console.log("ok ok ok")
+    
+        const response = await client.query(
+          `
+          INSERT INTO users (username, email, password)
+          VALUES ($1, $2, $3)
+          `,
+          [userName, email, hashedPassword]
+        )
+    
+        console.log(response)
+        res.json({message: "success"})
+      } catch (error) {
+        console.log("Error:", error);
+        res.json({message: "failure", error: error})
       }
     })
     .listen(3001, () => {
