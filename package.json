@@ -17,6 +17,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.5",
-    "@types/pg": "^8.10.9"
+    "@types/pg": "^8.10.9",
+    "dbmate": "^2.9.0"
   }
 }
