@@ -9,4 +9,4 @@ CREATE TABLE quiz_questions (
 
 
 -- migrate:down
-
+drop table quiz_questions
