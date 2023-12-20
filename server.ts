@@ -44,12 +44,12 @@ async function startServer() {
         const correctPassword = await compare(password, user.password);
 
         if (!correctPassword) {
-          res.json({ message: "email or password is incorrect" });
+          return res.json({ message: "email or password is incorrect" });
         }
 
         const token = generateAccessToken(email);
 
-        console.log(token);
+        console.log(token + " loginned");
         return res.json({ token: token });
       } catch (error) {
         console.log("Error:", error);
@@ -79,11 +79,12 @@ async function startServer() {
         console.log("Error:", error);
         res.json({ message: "failure", error: error });
       }
-    })
+    });
 
-    const studyGroupRouter = require("./routes/studyGroups")
+  const studyGroupRouter = require("./routes/studyGroups");
 
-    app.use("/studygroup", studyGroupRouter)
+  app
+    .use("/studygroup", studyGroupRouter)
 
     .listen(3001, () => {
       console.log("Server has started at http://localhost:3001");
