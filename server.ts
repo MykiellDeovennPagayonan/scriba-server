@@ -9,6 +9,7 @@ import { compare, hash } from "bcrypt";
 dotenv.config({ path: ".env" });
 
 const app = express();
+const studyGroupRouter = require("./routes/studyGroups");
 
 export const client = new Client({
   host: process.env.DB_HOST,
@@ -80,8 +81,6 @@ async function startServer() {
         res.json({ message: "failure", error: error });
       }
     });
-
-  const studyGroupRouter = require("./routes/studyGroups");
 
   app
     .use("/studygroup", studyGroupRouter)
