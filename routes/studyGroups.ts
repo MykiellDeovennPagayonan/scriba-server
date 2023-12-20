@@ -5,25 +5,39 @@ import { client } from "../server";
 
 // router.all('/api/*', requireAuthentication)
 
-router.use(logger).post("/new", async (req: Request, res: Response) => {
-  const { studyGroupName, studyGroupDescription } = req.body;
+router
+  .use(logger)
+  .get("/", async (req: Request, res: Response) => {
+    try {
+      const response = await client.query(`SELECT * FROM study_groups`);
+      const rows = response.rows;
 
-  console.log(req.body);
-  try {
-    const response = await client.query(
-      `INSERT INTO study_groups (name, description)
+      console.log(rows);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  })
+  .post("/new", async (req: Request, res: Response) => {
+    const { studyGroupName, studyGroupDescription } = req.body;
+
+    console.log(req.body);
+    try {
+      const response = await client.query(
+        `INSERT INTO study_groups (name, description)
         VALUES ($1, $2)
         `,
-      [studyGroupName, studyGroupDescription]
-    );
-    console.log(response);
-    res.json({
-      message: "success",
-    });
-  } catch (err) {
-    console.log(err);
-  }
-});
+        [studyGroupName, studyGroupDescription]
+      );
+      console.log(response);
+      res.json({
+        message: "success",
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  });
 
 function logger(req: Request, res: Response, next: NextFunction) {
   console.log(req.originalUrl, "logger");
