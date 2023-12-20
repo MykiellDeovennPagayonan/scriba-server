@@ -10,7 +10,7 @@ dotenv.config({ path: ".env" });
 
 const app = express();
 
-const client = new Client({
+export const client = new Client({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   port: Number(process.env.DB_PORT),
@@ -80,6 +80,11 @@ async function startServer() {
         res.json({ message: "failure", error: error });
       }
     })
+
+    const studyGroupRouter = require("./routes/studyGroups")
+
+    app.use("/studygroup", studyGroupRouter)
+
     .listen(3001, () => {
       console.log("Server has started at http://localhost:3001");
     });
