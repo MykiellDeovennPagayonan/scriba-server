@@ -1,13 +1,16 @@
 import jwt from "jsonwebtoken"
+import * as dotenv from "dotenv";
 
-export function authenticateToken(token : string) {
+dotenv.config({ path: "../.env" });
+
+export function authenticateToken(token : string) : Promise<boolean> | boolean {
 
   jwt.verify(token, process.env.JWT_SECRET as string, (error, user) => {
     if (error) {
       console.log(error)
       return false
     }
-
-    return user
   })
+  
+  return true
 }
