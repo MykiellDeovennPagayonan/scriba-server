@@ -5,18 +5,17 @@ import { Request, Response } from "express";
 import { Client } from "pg";
 import * as dotenv from "dotenv";
 import { compare, hash } from "bcrypt";
+import requireAuth from "./middleware/authMiddleware";
 
 dotenv.config({ path: ".env" });
 
 const app = express();
 const studyGroupRouter = require("./routes/studyGroups");
 
+const connectionString = process.env.DATABASE_URL
+
 export const client = new Client({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  port: Number(process.env.DB_PORT),
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  connectionString: connectionString,
 });
 
 async function startServer() {
@@ -25,6 +24,7 @@ async function startServer() {
   app
     .use(cors())
     .use(express.json())
+    .use(requireAuth)
     .post("/api/auth/login", async (req: Request, res: Response) => {
       const { email, password } = req.body;
 
@@ -75,7 +75,10 @@ async function startServer() {
         );
 
         console.log(response);
-        res.json({ message: "success" });
+
+
+        const token = generateAccessToken(email);
+        res.json({ token: token });
       } catch (error) {
         console.log("Error:", error);
         res.json({ message: "failure", error: error });
