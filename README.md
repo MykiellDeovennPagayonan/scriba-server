@@ -4,9 +4,9 @@ For Connecting to database: https://github.com/amacneil/dbmate?tab=readme-ov-fil
 For starter:
 
 ```bash
-Automatically create database
+//Automatically create database
 npx dbmate create
 
-This creates the db table for you
+//This creates the db table for you
 npx dbmate up
 ```
