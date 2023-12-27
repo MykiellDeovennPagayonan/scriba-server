@@ -24,7 +24,12 @@ async function startServer() {
   app
     .use(cors())
     .use(express.json())
-    .use(requireAuth)
+    .get("/api/study-notes", async (req: Request, res: Response) => {
+      const result = await client.query(`
+      SELECT topics.name from topics
+      `);
+      res.json(result.rows);
+    })
     .post("/api/auth/login", async (req: Request, res: Response) => {
       const { email, password } = req.body;
 
