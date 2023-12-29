@@ -5,8 +5,8 @@ import { client } from "../server";
 import requireAuth from "../middleware/authMiddleware";
 
 interface Topic {
-  name: string,
-  id: number
+  name: string;
+  id: number;
 }
 
 interface CreateStudyNoteRequest {
@@ -16,6 +16,21 @@ interface CreateStudyNoteRequest {
 }
 
 router
+  .post("/:id", async (req: Request, res: Response) => {
+    const { message } = req.body;
+    const id = req.params.id;
+
+    const answer = {
+      message: message + " ohh Yeah!",
+      id: id,
+    };
+
+    res.json(answer);
+  })
+  .get("/:id", async (req: Request, res: Response) => {
+    // this is for testing
+    res.json({ message: "burger!" });
+  })
   .get("/", requireAuth, async (req: Request, res: Response) => {
     const result = await client.query(`
   SELECT topics.name, topics.id from topics
@@ -60,13 +75,12 @@ router
       RETURNING id
       `,
         queryValues
-      )
+      );
 
       return res.json({ message: studyNoteID });
     } catch (error) {
       console.log("Error:", error);
     }
-
     res.json({ authenticated: true, body: "hello" });
   });
 
