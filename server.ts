@@ -9,6 +9,17 @@ import requireAuth from "./middleware/authMiddleware";
 
 dotenv.config({ path: ".env" });
 
+interface Topic {
+  name: string,
+  id: number
+}
+
+interface CreateStudyNoteRequest {
+  title: string;
+  topics: Array<Topic>;
+  isPublic: boolean;
+}
+
 const app = express();
 const studyGroupRouter = require("./routes/studyGroups");
 
@@ -26,9 +37,58 @@ async function startServer() {
     .use(express.json())
     .get("/api/study-notes", requireAuth,  async (req: Request, res: Response) => {
       const result = await client.query(`
-      SELECT topics.name from topics
+      SELECT topics.name, topics.id from topics
       `);
       res.json({ authenticated: true, body: result.rows });
+    })
+    .post("/api/study-notes", async (req: Request, res: Response) => {
+      const { title, topics, isPublic } : CreateStudyNoteRequest = req.body
+
+      try {
+        const id = await client.query(
+          `
+          INSERT INTO study_notes (date_published, title, is_public, study_notes_edited_date)
+          VALUES (NOW(), $1, $2, NOW())
+          RETURNING id
+          `,
+          [title, isPublic]
+        );
+
+        const studyNoteID = id.rows[0].id
+
+        let queryValuesHolder = ""
+        let queryValues : Array<number> = []
+
+        for (let i = 0; i < topics.length; i++) {
+          queryValuesHolder += `($${i * 2 + 1}, $${i * 2 + 2})`
+          queryValues.push(topics[i].id)
+          queryValues.push(studyNoteID)
+
+          if (i < topics.length - 1) {
+            queryValuesHolder += `,`
+          }
+        }
+
+        console.log(queryValuesHolder)
+        console.log(queryValues)
+
+        const response = await client.query(
+          `
+          INSERT INTO study_note_topics (topic_id, study_notes_id)
+          VALUES ${queryValuesHolder}
+          RETURNING id
+          `,
+          queryValues
+        )
+
+        console.log(response)
+
+        return res.json({ message: studyNoteID });
+      } catch (error) {
+        console.log("Error:", error);
+      }
+
+      res.json({ authenticated: true, body: "hello" })
     })
     .post("/api/auth/login", async (req: Request, res: Response) => {
       const { email, password } = req.body;
