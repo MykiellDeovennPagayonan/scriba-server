@@ -33,7 +33,6 @@ router
 
       const token = generateAccessToken(email);
 
-      console.log(token + " loginned");
       return res.json({ token: token });
     } catch (error) {
       console.log("Error:", error);
@@ -41,25 +40,21 @@ router
   })
   .post("/register", async (req: Request, res: Response) => {
     const { userName, email, password } = req.body;
-
-    console.log(req.body);
     try {
       const hashedPassword = await hash(password, 10);
-
-      console.log(hashedPassword);
-      console.log("ok ok ok");
 
       const response = await client.query(
         `
       INSERT INTO users (username, email, password)
       VALUES ($1, $2, $3)
+      RETURNING id
       `,
         [userName, email, hashedPassword]
       );
 
-      console.log(response);
+      const id = response.rows[0].id
 
-      const token = generateAccessToken(email);
+      const token = generateAccessToken({email, id});
       res.json({ token: token });
     } catch (error) {
       console.log("Error:", error);

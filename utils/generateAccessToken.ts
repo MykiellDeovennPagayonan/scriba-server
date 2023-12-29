@@ -3,7 +3,12 @@ import * as dotenv from "dotenv";
 
 dotenv.config({ path: "../.env" });
 
-export default function generateAccessToken(user : string) {
-  const token = jwt.sign(user, process.env.JWT_ACCESS_SECRET as string)
+interface Payload {
+  email: string,
+  id: number
+}
+
+export default function generateAccessToken(payload : Payload) {
+  const token = jwt.sign(payload, process.env.JWT_ACCESS_SECRET as string)
   return token
 }

@@ -10,6 +10,7 @@ interface Topic {
 }
 
 interface CreateStudyNoteRequest {
+  userId: number;
   title: string;
   topics: Array<Topic>;
   isPublic: boolean;
@@ -38,16 +39,16 @@ router
     res.json({ authenticated: true, body: result.rows });
   })
   .post("/", async (req: Request, res: Response) => {
-    const { title, topics, isPublic }: CreateStudyNoteRequest = req.body;
+    const { userId, title, topics, isPublic }: CreateStudyNoteRequest = req.body;
 
     try {
       const id = await client.query(
         `
-      INSERT INTO study_notes (date_published, title, is_public, study_notes_edited_date)
-      VALUES (NOW(), $1, $2, NOW())
+      INSERT INTO study_notes (user_id, date_published, title, is_public, study_notes_edited_date)
+      VALUES ($1, NOW(), $2, $3, NOW())
       RETURNING id
       `,
-        [title, isPublic]
+        [userId, title, isPublic]
       );
 
       const studyNoteID = id.rows[0].id;
@@ -64,9 +65,6 @@ router
           queryValuesHolder += `,`;
         }
       }
-
-      console.log(queryValuesHolder);
-      console.log(queryValues);
 
       const response = await client.query(
         `
