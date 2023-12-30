@@ -77,16 +77,23 @@ router
     // this is for testing
     res.json({ message: "burger!" });
   })
-  .post("/", requireAuth, async (req: Request, res: Response) => {
+  .post("/", async (req: Request, res: Response) => {
     const { userId } = req.body
 
     console.log("yes?")
 
     const result = await client.query(`
-    SELECT * from study_notes WHERE study_notes.user_id = $1
+    SELECT study_notes.title, topics.name as "topicName", study_notes.id as "studyNoteId"
+    from users
+    INNER JOIN study_notes
+    ON users.id = study_notes.user_id
+    INNER JOIN study_note_topics
+    ON study_notes.id = study_note_topics.study_notes_id
+    INNER JOIN topics ON study_note_topics.topic_id = topics.id
+    WHERE users.id = $1
     `, [ userId ]
     );
     res.json({ authenticated: true, body: result.rows });
-  });
+  })
 
 module.exports = router;
