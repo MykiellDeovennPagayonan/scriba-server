@@ -21,11 +21,11 @@ router
 
       const user = response.rows[0];
 
-      const userId = user.id
-
       if (response.rows.length === 0) {
         res.json({ message: "email or password is incorrect" });
       }
+
+      const userId = user.id
 
       const correctPassword = await compare(password, user.password);
 
