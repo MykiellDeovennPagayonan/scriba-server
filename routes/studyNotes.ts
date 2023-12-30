@@ -20,7 +20,6 @@ router
   .post("/new", async (req: Request, res: Response) => {
     const { userId, title, topics, isPublic }: CreateStudyNoteRequest =
       req.body;
-    console.log(userId);
 
     try {
       const id = await client.query(
@@ -79,8 +78,6 @@ router
   })
   .post("/", async (req: Request, res: Response) => {
     const { userId } = req.body
-
-    console.log("yes?")
 
     const result = await client.query(`
     SELECT study_notes.title, topics.name as "topicName", study_notes.id as "studyNoteId"
