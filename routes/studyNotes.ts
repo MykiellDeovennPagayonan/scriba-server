@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { Response, Request, NextFunction } from "express";
+import { Response, Request } from "express";
 import { client } from "../server";
 import requireAuth from "../middleware/authMiddleware";
 
@@ -17,37 +17,18 @@ interface CreateStudyNoteRequest {
 }
 
 router
-  .post("/:id", async (req: Request, res: Response) => {
-    const { message } = req.body;
-    const id = req.params.id;
-
-    const answer = {
-      message: message + " ohh Yeah!",
-      id: id,
-    };
-
-    res.json(answer);
-  })
-  .get("/:id", async (req: Request, res: Response) => {
-    // this is for testing
-    res.json({ message: "burger!" });
-  })
-  .get("/", requireAuth, async (req: Request, res: Response) => {
-    const result = await client.query(`
-  SELECT topics.name, topics.id from topics
-  `);
-    res.json({ authenticated: true, body: result.rows });
-  })
-  .post("/", async (req: Request, res: Response) => {
-    const { userId, title, topics, isPublic }: CreateStudyNoteRequest = req.body;
+  .post("/new", async (req: Request, res: Response) => {
+    const { userId, title, topics, isPublic }: CreateStudyNoteRequest =
+      req.body;
+    console.log(userId);
 
     try {
       const id = await client.query(
         `
-      INSERT INTO study_notes (user_id, date_published, title, is_public, study_notes_edited_date)
-      VALUES ($1, NOW(), $2, $3, NOW())
-      RETURNING id
-      `,
+    INSERT INTO study_notes (user_id, date_published, title, is_public, study_notes_edited_date)
+    VALUES ($1, NOW(), $2, $3, NOW())
+    RETURNING id
+    `,
         [userId, title, isPublic]
       );
 
@@ -68,10 +49,10 @@ router
 
       const response = await client.query(
         `
-      INSERT INTO study_note_topics (topic_id, study_notes_id)
-      VALUES ${queryValuesHolder}
-      RETURNING id
-      `,
+    INSERT INTO study_note_topics (topic_id, study_notes_id)
+    VALUES ${queryValuesHolder}
+    RETURNING id
+    `,
         queryValues
       );
 
@@ -80,6 +61,32 @@ router
       console.log("Error:", error);
     }
     res.json({ authenticated: true, body: "hello" });
+  })
+  .post("/:id", async (req: Request, res: Response) => {
+    const { message } = req.body;
+    const id = req.params.id;
+
+    const answer = {
+      message: message + " ohh Yeah!",
+      id: id,
+    };
+
+    res.json(answer);
+  })
+  .get("/:id", async (req: Request, res: Response) => {
+    // this is for testing
+    res.json({ message: "burger!" });
+  })
+  .post("/", requireAuth, async (req: Request, res: Response) => {
+    const { userId } = req.body
+
+    console.log("yes?")
+
+    const result = await client.query(`
+    SELECT * from study_notes WHERE study_notes.user_id = $1
+    `, [ userId ]
+    );
+    res.json({ authenticated: true, body: result.rows });
   });
 
 module.exports = router;

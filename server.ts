@@ -9,6 +9,7 @@ const app = express();
 const studyGroupRouter = require("./routes/studyGroups");
 const studyNotesRouter = require("./routes/studyNotes")
 const authRouther = require("./routes/auth")
+const topics = require("./routes/topics")
 
 const connectionString = process.env.DATABASE_URL
 
@@ -22,6 +23,7 @@ async function startServer() {
   app
     .use(cors())
     .use(express.json())
+    .use("/api/topics", topics)
     .use("/api/auth", authRouther)
     .use("/studygroup", studyGroupRouter)
     .use("/api/study-notes", studyNotesRouter)

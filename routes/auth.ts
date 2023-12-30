@@ -21,6 +21,8 @@ router
 
       const user = response.rows[0];
 
+      const userId = user.id
+
       if (response.rows.length === 0) {
         res.json({ message: "email or password is incorrect" });
       }
@@ -31,7 +33,7 @@ router
         return res.json({ message: "email or password is incorrect" });
       }
 
-      const token = generateAccessToken(email);
+      const token = generateAccessToken({email, id: userId});
 
       return res.json({ token: token });
     } catch (error) {
@@ -52,9 +54,9 @@ router
         [userName, email, hashedPassword]
       );
 
-      const id = response.rows[0].id
+      const userId = response.rows[0].id
 
-      const token = generateAccessToken({email, id});
+      const token = generateAccessToken({email, id: userId});
       res.json({ token: token });
     } catch (error) {
       console.log("Error:", error);
