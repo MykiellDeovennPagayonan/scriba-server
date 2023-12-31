@@ -12,7 +12,6 @@ router
       const response = await client.query(`SELECT * FROM study_groups`);
       const rows = response.rows;
 
-      console.log(rows);
       res.json(rows);
     } catch (err) {
       console.error(err);
@@ -22,7 +21,6 @@ router
   .post("/new", async (req: Request, res: Response) => {
     const { studyGroupName, studyGroupDescription } = req.body;
 
-    console.log(req.body);
     try {
       const response = await client.query(
         `INSERT INTO study_groups (name, description)
@@ -30,7 +28,6 @@ router
         `,
         [studyGroupName, studyGroupDescription]
       );
-      console.log(response);
       res.json({
         message: "success",
       });

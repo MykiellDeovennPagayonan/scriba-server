@@ -1,7 +1,7 @@
 -- migrate:up
 CREATE TABLE study_notes (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
     date_published TIMESTAMP NOT NULL,
     title VARCHAR(255) NOT NULL,
     is_public BOOLEAN NOT NULL,

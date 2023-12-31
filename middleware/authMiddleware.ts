@@ -8,13 +8,9 @@ export default async function requireAuth(req: Request, res: Response, next: Nex
     token = null
   }
 
-  console.log(token)
-
   if (token === null) {
-    console.log("here")
     res.json({ authenticated: false, body: []})
   } else {
-    console.log("????????")
     next()
   }
 
