@@ -48,10 +48,10 @@ router
 
       const response = await client.query(
         `
-    INSERT INTO study_note_topics (topic_id, study_notes_id)
-    VALUES ${queryValuesHolder}
-    RETURNING id
-    `,
+        INSERT INTO study_note_topics (topic_id, study_notes_id)
+        VALUES ${queryValuesHolder}
+        RETURNING id
+        `,
         queryValues
       );
 
@@ -63,38 +63,54 @@ router
   })
   .post("/:id", async (req: Request, res: Response) => {
     const { sentences } = req.body;
-    
+
+    let queryValuesHolder = "";
+    let queryValues: Array<number> = [];
+
     for (let i = 0; i < sentences.length; i++) {
-      console.log(sentences[i])
+      queryValuesHolder += `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`;
+      queryValues.push(sentences[i].id);
+      queryValues.push(sentences[i].text);
+      queryValues.push(sentences[i].type)
+      queryValues.push(Number(sentences[i].studyNoteId))
+
+      if (i < sentences.length - 1) {
+        queryValuesHolder += `,`;
+      }
     }
+
+    console.log(queryValues)
+    console.log(queryValuesHolder)
+
+    const results = await client.query(`
+    MERGE INTO sentences
+    USING (
+    VALUES ${queryValuesHolder}
+    ) AS source (id, text, type, studyNoteId)
+    ON sentences.id = source.id
+    WHEN MATCHED THEN
+    UPDATE SET 
+        text = source.text,
+        type = source.type,
+        study_note_id = source.studyNoteId::integer
+    WHEN NOT MATCHED THEN
+    INSERT (id, text, type, study_note_id)
+    VALUES (source.id, source.text, source.type, source.studyNoteId::integer)  
+    `, queryValues
+    )
 
     res.json({ authenticated: true, body: "Blehhh" })
   })
   .get("/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    const answer = {
-      id: id,
-    };
+    const results = await client.query(`
+    SELECT * from sentences WHERE sentences.study_note_id = $1
+    `, [id]
+    )
 
-//     MERGE INTO sentences
-// USING (
-//     VALUES 
-//         ('6VfQtW6CA1', 'kjhgfds', 'paragraph', 0),
-//         ('1izCYu-bQH', 'jfdgsdss', 'paragraph', 0),
-//         ('6psF30W2aO', 'fsdvacs', 'paragraph', 0)
-// ) AS source (id, text, type, studyNoteId)
-// ON sentences.id = source.id
-// WHEN MATCHED THEN
-//     UPDATE SET 
-//         text = source.text,
-//         type = source.type,
-//         study_note_id = source.studyNoteId
-// WHEN NOT MATCHED THEN
-//     INSERT (id, text, type, study_note_id)
-//     VALUES (source.id, source.text, source.type, source.studyNoteId)
 
-    res.json({ authenticated: true, body: answer })
+    res.json({ authenticated: true, body: results.rows })
   })
   .post("/", requireAuth, async (req: Request, res: Response) => {
     const { userId } = req.body
