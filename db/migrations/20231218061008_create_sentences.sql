@@ -1,8 +1,9 @@
 -- migrate:up
 CREATE TABLE sentences (
-    id SERIAL PRIMARY KEY,
+    id VARCHAR(255) NOT NULL,
     text TEXT NOT NULL,
-    embedding BYTEA, -- Assuming embedding is a binary data
+    type VARCHAR(255) NOT NULL,
+    embedding FLOAT8[],
     study_note_id INT REFERENCES study_notes(id) ON DELETE CASCADE
 );
 
