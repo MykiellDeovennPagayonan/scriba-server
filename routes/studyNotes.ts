@@ -62,21 +62,41 @@ router
     res.json({ authenticated: true, body: "hello" });
   })
   .post("/:id", async (req: Request, res: Response) => {
-    const { message } = req.body;
+    const { sentences } = req.body;
+    
+    for (let i = 0; i < sentences.length; i++) {
+      console.log(sentences[i])
+    }
+
+    res.json({ authenticated: true, body: "Blehhh" })
+  })
+  .get("/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
 
     const answer = {
-      message: message + " ohh Yeah!",
       id: id,
     };
 
-    res.json(answer);
+//     MERGE INTO sentences
+// USING (
+//     VALUES 
+//         ('6VfQtW6CA1', 'kjhgfds', 'paragraph', 0),
+//         ('1izCYu-bQH', 'jfdgsdss', 'paragraph', 0),
+//         ('6psF30W2aO', 'fsdvacs', 'paragraph', 0)
+// ) AS source (id, text, type, studyNoteId)
+// ON sentences.id = source.id
+// WHEN MATCHED THEN
+//     UPDATE SET 
+//         text = source.text,
+//         type = source.type,
+//         study_note_id = source.studyNoteId
+// WHEN NOT MATCHED THEN
+//     INSERT (id, text, type, study_note_id)
+//     VALUES (source.id, source.text, source.type, source.studyNoteId)
+
+    res.json({ authenticated: true, body: answer })
   })
-  .get("/:id", async (req: Request, res: Response) => {
-    // this is for testing
-    res.json({ message: "burger!" });
-  })
-  .post("/", async (req: Request, res: Response) => {
+  .post("/", requireAuth, async (req: Request, res: Response) => {
     const { userId } = req.body
 
     const result = await client.query(`
