@@ -61,10 +61,57 @@ router
     }
     res.json({ authenticated: true, body: "hello" });
   })
-  .post("/:id", async (req: Request, res: Response) => {
+  .post("/quizzes/:id", async (req: Request, res: Response) => {
+    const { quizItems } = req.body;
+
+    const studyNoteId = req.params.id
+
+    let queryValuesHolder = "";
+    let queryValues: Array<number> = [];
+
+    for (let i = 0; i < quizItems.length; i++) {
+      queryValuesHolder += `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`;
+      queryValues.push(quizItems[i].question);
+      queryValues.push(quizItems[i].answer);
+      queryValues.push(Number(studyNoteId));
+
+      if (i < quizItems.length - 1) {
+        queryValuesHolder += `,`;
+      }
+    }
+
+    console.log(queryValues)
+    console.log(queryValuesHolder)
+
+    await client.query(`
+    DELETE FROM quiz_questions
+    WHERE quiz_questions.study_notes_id = $1::integer
+    `, [ studyNoteId ]
+    )
+
+    await client.query(`
+    INSERT INTO quiz_questions (question, answer, study_notes_id)
+    VALUES ${queryValuesHolder}
+    `, queryValues
+    )
+
+    res.json({ authenticated: true, body: quizItems })
+  })
+  .get("/quizzes/:id", requireAuth, async (req: Request, res: Response) => {
+    const id = req.params.id;
+
+    const results = await client.query(`
+    SELECT * from sentences WHERE sentences.study_note_id = $1
+    `, [id]
+    )
+
+
+    res.json({ authenticated: true, body: results.rows })
+  })
+  .post("/notes/:id", async (req: Request, res: Response) => {
     const { sentences } = req.body;
 
-    const studyNoteId = sentences[0]?.studyNoteId 
+    const studyNoteId = req.params.id
 
     let queryValuesHolder = "";
     let queryValues: Array<number> = [];
@@ -81,9 +128,6 @@ router
       }
     }
 
-    console.log(queryValues)
-    console.log(queryValuesHolder)
-
     await client.query(`
     DELETE FROM sentences
     WHERE sentences.study_note_id = $1::integer
@@ -98,7 +142,7 @@ router
 
     res.json({ authenticated: true, body: "Blehhh" })
   })
-  .get("/:id", requireAuth, async (req: Request, res: Response) => {
+  .get("/notes/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
 
     const results = await client.query(`
