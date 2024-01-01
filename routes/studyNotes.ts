@@ -64,6 +64,8 @@ router
   .post("/:id", async (req: Request, res: Response) => {
     const { sentences } = req.body;
 
+    const studyNoteId = sentences[0]?.studyNoteId 
+
     let queryValuesHolder = "";
     let queryValues: Array<number> = [];
 
@@ -82,20 +84,15 @@ router
     console.log(queryValues)
     console.log(queryValuesHolder)
 
-    const results = await client.query(`
-    MERGE INTO sentences
-    USING (
+    await client.query(`
+    DELETE FROM sentences
+    WHERE sentences.study_note_id = $1::integer
+    `, [ studyNoteId ]
+    )
+
+    await client.query(`
+    INSERT INTO sentences (id, text, type, study_note_id)
     VALUES ${queryValuesHolder}
-    ) AS source (id, text, type, studyNoteId)
-    ON sentences.id = source.id
-    WHEN MATCHED THEN
-    UPDATE SET 
-        text = source.text,
-        type = source.type,
-        study_note_id = source.studyNoteId::integer
-    WHEN NOT MATCHED THEN
-    INSERT (id, text, type, study_note_id)
-    VALUES (source.id, source.text, source.type, source.studyNoteId::integer)  
     `, queryValues
     )
 
