@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import { Response, Request } from "express";
-import { client } from "../../server";
+import { pool } from "../../server";
 import requireAuth from "../../middleware/authMiddleware";
 
 router
@@ -27,6 +27,7 @@ router
       }
     }
 
+    const client = await pool.connect()
     await client.query(
       `
       DELETE FROM sentences
@@ -48,6 +49,7 @@ router
   .get("/:id", async (req: Request, res: Response) => {
     const id = req.params.id;
 
+    const client = await pool.connect()
     const results = await client.query(
       `
       SELECT * from sentences WHERE sentences.study_note_id = $1

@@ -1,13 +1,14 @@
 import express from "express";
 const router = express.Router();
 import { Response, Request } from "express";
-import { client } from "../../server";
+import { pool } from "../../server";
 import requireAuth from "../../middleware/authMiddleware";
 
 router
   .post("/:id", async (req: Request, res: Response) => {
     const { question, answer, studyNoteId } = req.body;
 
+    const client = await pool.connect()
     const response = await client.query(`
     INSERT INTO quiz_questions (question, answer, study_notes_id)
     VALUES ($1, $2, $3)
@@ -19,6 +20,7 @@ router
   .get("/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
 
+    const client = await pool.connect()
     const results = await client.query(
       `
       SELECT * FROM quiz_questions WHERE quiz_questions.study_notes_id = $1
@@ -34,6 +36,7 @@ router
     const { id, question, answer } = req.body;
     const studyNoteId = req.params.id;
 
+    const client = await pool.connect()
     const response = await client.query(`
       UPDATE quiz_questions
       SET

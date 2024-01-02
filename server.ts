@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { Client } from "pg";
+import { Pool } from 'pg';
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env" });
@@ -13,12 +13,11 @@ const topics = require("./routes/topics")
 
 const connectionString = process.env.DATABASE_URL
 
-export const client = new Client({
+export const pool = new Pool({
   connectionString: connectionString,
 });
 
 async function startServer() {
-  await client.connect();
 
   app
     .use(cors())
