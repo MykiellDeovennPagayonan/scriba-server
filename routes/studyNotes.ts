@@ -48,10 +48,10 @@ router
 
       const response = await client.query(
         `
-    INSERT INTO study_note_topics (topic_id, study_notes_id)
-    VALUES ${queryValuesHolder}
-    RETURNING id
-    `,
+        INSERT INTO study_note_topics (topic_id, study_notes_id)
+        VALUES ${queryValuesHolder}
+        RETURNING id
+        `,
         queryValues
       );
 
@@ -61,22 +61,99 @@ router
     }
     res.json({ authenticated: true, body: "hello" });
   })
-  .post("/:id", async (req: Request, res: Response) => {
-    const { message } = req.body;
+  .post("/quizzes/:id", async (req: Request, res: Response) => {
+    const { quizItems } = req.body;
+
+    const studyNoteId = req.params.id
+
+    let queryValuesHolder = "";
+    let queryValues: Array<number> = [];
+
+    for (let i = 0; i < quizItems.length; i++) {
+      queryValuesHolder += `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`;
+      queryValues.push(quizItems[i].question);
+      queryValues.push(quizItems[i].answer);
+      queryValues.push(Number(studyNoteId));
+
+      if (i < quizItems.length - 1) {
+        queryValuesHolder += `,`;
+      }
+    }
+
+    console.log(queryValues)
+    console.log(queryValuesHolder)
+
+    await client.query(`
+    DELETE FROM quiz_questions
+    WHERE quiz_questions.study_notes_id = $1::integer
+    `, [ studyNoteId ]
+    )
+
+    await client.query(`
+    INSERT INTO quiz_questions (question, answer, study_notes_id)
+    VALUES ${queryValuesHolder}
+    `, queryValues
+    )
+
+    res.json({ authenticated: true, body: quizItems })
+  })
+  .get("/quizzes/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    const answer = {
-      message: message + " ohh Yeah!",
-      id: id,
-    };
+    const results = await client.query(`
+    SELECT * from sentences WHERE sentences.study_note_id = $1
+    `, [id]
+    )
 
-    res.json(answer);
+
+    res.json({ authenticated: true, body: results.rows })
   })
-  .get("/:id", async (req: Request, res: Response) => {
-    // this is for testing
-    res.json({ message: "burger!" });
+  .post("/notes/:id", async (req: Request, res: Response) => {
+    const { sentences } = req.body;
+
+    const studyNoteId = req.params.id
+
+    let queryValuesHolder = "";
+    let queryValues: Array<number> = [];
+
+    for (let i = 0; i < sentences.length; i++) {
+      queryValuesHolder += `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`;
+      queryValues.push(sentences[i].id);
+      queryValues.push(sentences[i].text);
+      queryValues.push(sentences[i].type)
+      queryValues.push(Number(sentences[i].studyNoteId))
+
+      if (i < sentences.length - 1) {
+        queryValuesHolder += `,`;
+      }
+    }
+
+    await client.query(`
+    DELETE FROM sentences
+    WHERE sentences.study_note_id = $1::integer
+    `, [ studyNoteId ]
+    )
+
+    await client.query(`
+    INSERT INTO sentences (id, text, type, study_note_id)
+    VALUES ${queryValuesHolder}
+    `, queryValues
+    )
+
+    res.json({ authenticated: true, body: "Blehhh" })
   })
-  .post("/", async (req: Request, res: Response) => {
+  .get("/notes/:id", requireAuth, async (req: Request, res: Response) => {
+    const id = req.params.id;
+
+    const results = await client.query(`
+    SELECT * from sentences WHERE sentences.study_note_id = $1
+    `, [id]
+    )
+
+
+    res.json({ authenticated: true, body: results.rows })
+  })
+  .post("/", requireAuth, async (req: Request, res: Response) => {
     const { userId } = req.body
 
     const result = await client.query(`
