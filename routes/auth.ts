@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import { Response, Request, NextFunction } from "express";
-import { client } from "../server";
+import { pool } from "../server";
 import { compare, hash } from "bcrypt";
 import generateAccessToken from "../utils/generateAccessToken";
 
@@ -12,6 +12,7 @@ router
     const { email, password } = req.body;
 
     try {
+      const client = await pool.connect()
       const response = await client.query(
         `
     SELECT * FROM users WHERE email = $1
@@ -44,6 +45,7 @@ router
     const { userName, email, password } = req.body;
     try {
       const hashedPassword = await hash(password, 10);
+      const client = await pool.connect()
 
       const response = await client.query(
         `

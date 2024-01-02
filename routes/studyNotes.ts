@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import { Response, Request } from "express";
-import { client } from "../server";
+import { pool } from "../server";
 import requireAuth from "../middleware/authMiddleware";
 
 const notesRouter = require('./study-notes/notes')
@@ -25,6 +25,7 @@ router
       req.body;
 
     try {
+      const client = await pool.connect()
       const id = await client.query(
         `
         INSERT INTO study_notes (user_id, date_published, title, is_public, study_notes_edited_date)
@@ -66,6 +67,7 @@ router
   })
   .post("/", async (req: Request, res: Response) => {
     const { userId } = req.body
+    const client = await pool.connect()
 
     const result = await client.query(`
     SELECT study_notes.title, topics.name as "topicName", study_notes.id as "studyNoteId"
