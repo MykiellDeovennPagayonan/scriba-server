@@ -16,6 +16,7 @@ router
   `, [question, answer, studyNoteId])
 
     res.json({ authenticated: true, body: {id: response.rows[0].id} });
+    client.release()
   })
   .get("/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -28,9 +29,8 @@ router
       [id]
     );
 
-    console.log(results)
-
     res.json({ authenticated: true, body: results.rows });
+    client.release()
   })
   .put("/:id", async (req: Request, res: Response) => {
     const { id, question, answer } = req.body;
@@ -49,6 +49,7 @@ router
     const quizQuestionId = response.rows[0].id
 
     res.json({ authenticated: true, body: quizQuestionId });
+    client.release()
   })
 
 module.exports = router;

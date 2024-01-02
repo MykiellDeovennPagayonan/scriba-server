@@ -14,6 +14,7 @@ router
       const rows = response.rows;
 
       res.json(rows);
+      client.release()
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Internal Server Error" });
@@ -33,6 +34,7 @@ router
       res.json({
         message: "success",
       });
+      client.release()
     } catch (err) {
       console.log(err);
     }
