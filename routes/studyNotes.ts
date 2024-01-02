@@ -20,6 +20,8 @@ interface CreateStudyNoteRequest {
 }
 
 router
+  .use("/notes", notesRouter)
+  .use("/quizzes", quizzesRouter)
   .post("/new", async (req: Request, res: Response) => {
     const { userId, title, topics, isPublic }: CreateStudyNoteRequest =
       req.body;
@@ -59,11 +61,11 @@ router
         queryValues
       );
 
-      return res.json({ message: studyNoteID });
+      res.json({ message: studyNoteID });
+      client.release()
     } catch (error) {
       console.log("Error:", error);
     }
-    res.json({ authenticated: true, body: "hello" });
   })
   .post("/", async (req: Request, res: Response) => {
     const { userId } = req.body
@@ -81,8 +83,17 @@ router
     `, [ userId ]
     );
     res.json({ authenticated: true, body: result.rows });
+    client.release()
   })
-  .use("/notes", notesRouter)
-  .use("/quizzes", quizzesRouter)
+  .get("/:id", async (req: Request, res: Response) => {
+    const id = req.params.id;
+
+    const client = await pool.connect()
+    const result = await client.query(`
+    SELECT study_notes.title FROM study_notes WHERE study_notes.id = $1
+    `, [id]);
+    res.json({ authenticated: true, body: result.rows[0].title });
+    client.release()
+  })
 
 module.exports = router;

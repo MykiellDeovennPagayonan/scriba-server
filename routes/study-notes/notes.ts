@@ -45,6 +45,7 @@ router
     );
 
     res.json({ authenticated: true, body: "Blehhh" });
+    client.release()
   })
   .get("/:id", async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -58,6 +59,7 @@ router
     );
 
     res.json({ authenticated: true, body: results.rows });
+    client.release()
   });
 
 module.exports = router;
