@@ -6,44 +6,15 @@ import requireAuth from "../../middleware/authMiddleware";
 
 router
   .post("/:id", async (req: Request, res: Response) => {
-    const { quizItems } = req.body;
+    const { question, answer, studyNoteId } = req.body;
 
-    const studyNoteId = req.params.id;
+    const response = await client.query(`
+    INSERT INTO quiz_questions (question, answer, study_notes_id)
+    VALUES ($1, $2, $3)
+    RETURNING id
+  `, [question, answer, studyNoteId])
 
-    let queryValuesHolder = "";
-    let queryValues: Array<number> = [];
-
-    for (let i = 0; i < quizItems.length; i++) {
-      queryValuesHolder += `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`;
-      queryValues.push(quizItems[i].question);
-      queryValues.push(quizItems[i].answer);
-      queryValues.push(Number(studyNoteId));
-
-      if (i < quizItems.length - 1) {
-        queryValuesHolder += `,`;
-      }
-    }
-
-    console.log(queryValues);
-    console.log(queryValuesHolder);
-
-    await client.query(
-      `
-  DELETE FROM quiz_questions
-  WHERE quiz_questions.study_notes_id = $1::integer
-  `,
-      [studyNoteId]
-    );
-
-    await client.query(
-      `
-  INSERT INTO quiz_questions (question, answer, study_notes_id)
-  VALUES ${queryValuesHolder}
-  `,
-      queryValues
-    );
-
-    res.json({ authenticated: true, body: quizItems });
+    res.json({ authenticated: true, body: {id: response.rows[0].id} });
   })
   .get("/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -58,6 +29,23 @@ router
     console.log(results)
 
     res.json({ authenticated: true, body: results.rows });
-  });
+  })
+  .put("/:id", async (req: Request, res: Response) => {
+    const { id, question, answer } = req.body;
+    const studyNoteId = req.params.id;
+
+    const response = await client.query(`
+      UPDATE quiz_questions
+      SET
+        question = $1,
+        answer = $2
+      WHERE id = $3
+      RETURNING id
+    `, [question, answer, id])
+
+    const quizQuestionId = response.rows[0].id
+
+    res.json({ authenticated: true, body: quizQuestionId });
+  })
 
 module.exports = router;
