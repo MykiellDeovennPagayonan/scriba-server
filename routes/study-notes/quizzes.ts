@@ -1,0 +1,51 @@
+import express from "express";
+const router = express.Router();
+import { Response, Request } from "express";
+import { client } from "../../server";
+import requireAuth from "../../middleware/authMiddleware";
+
+router
+  .post("/:id", async (req: Request, res: Response) => {
+    const { question, answer, studyNoteId } = req.body;
+
+    const response = await client.query(`
+    INSERT INTO quiz_questions (question, answer, study_notes_id)
+    VALUES ($1, $2, $3)
+    RETURNING id
+  `, [question, answer, studyNoteId])
+
+    res.json({ authenticated: true, body: {id: response.rows[0].id} });
+  })
+  .get("/:id", requireAuth, async (req: Request, res: Response) => {
+    const id = req.params.id;
+
+    const results = await client.query(
+      `
+      SELECT * FROM quiz_questions WHERE quiz_questions.study_notes_id = $1
+      `,
+      [id]
+    );
+
+    console.log(results)
+
+    res.json({ authenticated: true, body: results.rows });
+  })
+  .put("/:id", async (req: Request, res: Response) => {
+    const { id, question, answer } = req.body;
+    const studyNoteId = req.params.id;
+
+    const response = await client.query(`
+      UPDATE quiz_questions
+      SET
+        question = $1,
+        answer = $2
+      WHERE id = $3
+      RETURNING id
+    `, [question, answer, id])
+
+    const quizQuestionId = response.rows[0].id
+
+    res.json({ authenticated: true, body: quizQuestionId });
+  })
+
+module.exports = router;

@@ -9,7 +9,7 @@ router
     const result = await client.query(`
     SELECT topics.name, topics.id from topics
     `);
-    res.json({ authenticated: true, body: result.rows });
+    res.json({ authenticated: true, body: [] });
   })
 
 
