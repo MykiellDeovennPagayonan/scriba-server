@@ -67,6 +67,21 @@ router
       console.log("Error:", error);
     }
   })
+  .delete("/delete", async (req: Request, res: Response) => {
+    const { id: studyNoteID } = req.body
+    const client = await pool.connect()
+
+    console.log(studyNoteID)
+
+    const result = await client.query(`
+    DELETE FROM study_notes
+    WHERE id = $1
+    `, [ studyNoteID ]
+    )
+    
+    res.json({ authenticated: true, body: result.rows });
+    client.release()
+  })
   .post("/", async (req: Request, res: Response) => {
     const { userId } = req.body
     const client = await pool.connect()
