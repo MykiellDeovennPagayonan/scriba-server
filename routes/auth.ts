@@ -5,8 +5,6 @@ import { pool } from "../server";
 import { compare, hash } from "bcrypt";
 import generateAccessToken from "../utils/generateAccessToken";
 
-// router.all('/api/*', requireAuthentication)
-
 router
   .post("/login", async (req: Request, res: Response) => {
     const { email, password } = req.body;
