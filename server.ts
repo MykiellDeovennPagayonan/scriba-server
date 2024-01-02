@@ -24,7 +24,7 @@ async function startServer() {
     .use(express.json())
     .use("/api/topics", topics)
     .use("/api/auth", authRouther)
-    .use("/studygroup", studyGroupRouter)
+    .use("/api/study-groups", studyGroupRouter)
     .use("/api/study-notes", studyNotesRouter)
     .listen(3001, () => {
       console.log("Server has started at http://localhost:3001");
