@@ -4,6 +4,9 @@ import { Response, Request } from "express";
 import { client } from "../server";
 import requireAuth from "../middleware/authMiddleware";
 
+const notesRouter = require('./study-notes/notes')
+const quizzesRouter = require('./study-notes/quizzes')
+
 interface Topic {
   name: string;
   id: number;
@@ -24,10 +27,10 @@ router
     try {
       const id = await client.query(
         `
-    INSERT INTO study_notes (user_id, date_published, title, is_public, study_notes_edited_date)
-    VALUES ($1, NOW(), $2, $3, NOW())
-    RETURNING id
-    `,
+        INSERT INTO study_notes (user_id, date_published, title, is_public, study_notes_edited_date)
+        VALUES ($1, NOW(), $2, $3, NOW())
+        RETURNING id
+        `,
         [userId, title, isPublic]
       );
 
@@ -61,99 +64,7 @@ router
     }
     res.json({ authenticated: true, body: "hello" });
   })
-  .post("/quizzes/:id", async (req: Request, res: Response) => {
-    const { quizItems } = req.body;
-
-    const studyNoteId = req.params.id
-
-    let queryValuesHolder = "";
-    let queryValues: Array<number> = [];
-
-    for (let i = 0; i < quizItems.length; i++) {
-      queryValuesHolder += `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`;
-      queryValues.push(quizItems[i].question);
-      queryValues.push(quizItems[i].answer);
-      queryValues.push(Number(studyNoteId));
-
-      if (i < quizItems.length - 1) {
-        queryValuesHolder += `,`;
-      }
-    }
-
-    console.log(queryValues)
-    console.log(queryValuesHolder)
-
-    await client.query(`
-    DELETE FROM quiz_questions
-    WHERE quiz_questions.study_notes_id = $1::integer
-    `, [ studyNoteId ]
-    )
-
-    await client.query(`
-    INSERT INTO quiz_questions (question, answer, study_notes_id)
-    VALUES ${queryValuesHolder}
-    `, queryValues
-    )
-
-    res.json({ authenticated: true, body: quizItems })
-  })
-  .get("/quizzes/:id", requireAuth, async (req: Request, res: Response) => {
-    const id = req.params.id;
-
-    const results = await client.query(`
-    SELECT * from sentences WHERE sentences.study_note_id = $1
-    `, [id]
-    )
-
-
-    res.json({ authenticated: true, body: results.rows })
-  })
-  .post("/notes/:id", async (req: Request, res: Response) => {
-    const { sentences } = req.body;
-
-    const studyNoteId = req.params.id
-
-    let queryValuesHolder = "";
-    let queryValues: Array<number> = [];
-
-    for (let i = 0; i < sentences.length; i++) {
-      queryValuesHolder += `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`;
-      queryValues.push(sentences[i].id);
-      queryValues.push(sentences[i].text);
-      queryValues.push(sentences[i].type)
-      queryValues.push(Number(sentences[i].studyNoteId))
-
-      if (i < sentences.length - 1) {
-        queryValuesHolder += `,`;
-      }
-    }
-
-    await client.query(`
-    DELETE FROM sentences
-    WHERE sentences.study_note_id = $1::integer
-    `, [ studyNoteId ]
-    )
-
-    await client.query(`
-    INSERT INTO sentences (id, text, type, study_note_id)
-    VALUES ${queryValuesHolder}
-    `, queryValues
-    )
-
-    res.json({ authenticated: true, body: "Blehhh" })
-  })
-  .get("/notes/:id", requireAuth, async (req: Request, res: Response) => {
-    const id = req.params.id;
-
-    const results = await client.query(`
-    SELECT * from sentences WHERE sentences.study_note_id = $1
-    `, [id]
-    )
-
-
-    res.json({ authenticated: true, body: results.rows })
-  })
-  .post("/", requireAuth, async (req: Request, res: Response) => {
+  .post("/", async (req: Request, res: Response) => {
     const { userId } = req.body
 
     const result = await client.query(`
@@ -169,5 +80,7 @@ router
     );
     res.json({ authenticated: true, body: result.rows });
   })
+  .use("/notes", notesRouter)
+  .use("/quizzes", quizzesRouter)
 
 module.exports = router;
