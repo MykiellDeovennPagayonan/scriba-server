@@ -61,7 +61,7 @@ router
         queryValues
       );
 
-      res.json({ message: studyNoteID });
+      res.json({ authenticated: true, body: studyNoteID });
       client.release()
     } catch (error) {
       console.log("Error:", error);
