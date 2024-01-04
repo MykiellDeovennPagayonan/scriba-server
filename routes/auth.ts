@@ -10,7 +10,7 @@ router
     const { email, password } = req.body;
 
     try {
-      const client = await pool.connect()
+      const client = await pool.connect();
       const response = await client.query(
         `
     SELECT * FROM users WHERE email = $1
@@ -18,26 +18,27 @@ router
         [email]
       );
 
+      
       const user = response.rows[0];
 
-      if (response.rows.length === 0) {
+      if (response.rows.length === 0 || !user) {
         res.json({ message: "email or password is incorrect" });
-        client.release()
+        client.release();
       }
 
-      const userId = user.id
+      const userId = user.id;
 
       const correctPassword = await compare(password, user.password);
 
       if (!correctPassword) {
         return res.json({ message: "email or password is incorrect" });
-        client.release()
+        client.release();
       }
 
-      const token = generateAccessToken({email, id: userId});
+      const token = generateAccessToken({ email, id: userId });
 
       res.json({ token: token });
-      client.release()
+      client.release();
     } catch (error) {
       console.log("Error:", error);
     }
@@ -46,7 +47,7 @@ router
     const { userName, email, password } = req.body;
     try {
       const hashedPassword = await hash(password, 10);
-      const client = await pool.connect()
+      const client = await pool.connect();
 
       const response = await client.query(
         `
@@ -57,11 +58,11 @@ router
         [userName, email, hashedPassword]
       );
 
-      const userId = response.rows[0].id
+      const userId = response.rows[0].id;
 
-      const token = generateAccessToken({email, id: userId});
+      const token = generateAccessToken({ email, id: userId });
       res.json({ token: token });
-      client.release()
+      client.release();
     } catch (error) {
       console.log("Error:", error);
       res.json({ message: "failure", error: error });
