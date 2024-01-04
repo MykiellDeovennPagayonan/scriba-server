@@ -117,7 +117,44 @@ router
       [studyGroupId]
     );
 
-    console.log(result.rows);
+    res.json({ authenticated: true, body: result.rows });
+    client.release();
+  })
+  .get("/members/:id", async (req: Request, res: Response) => {
+    const studyGroupId = req.params.id;
+    const client = await pool.connect();
+
+    const result = await client.query(
+      `
+      SELECT users.id as "userID", users.username as "username" FROM users
+      INNER JOIN study_group_members
+      ON users.id = study_group_members.user_id
+      INNER JOIN study_groups 
+      ON study_groups.id = study_group_members.study_group_id
+      WHERE study_groups.id = $1
+    `,
+      [studyGroupId]
+    );
+
+    res.json({ authenticated: true, body: result.rows });
+    client.release();
+  })
+  .get("/admins/:id", async (req: Request, res: Response) => {
+    const studyGroupId = req.params.id;
+    const client = await pool.connect();
+
+    const result = await client.query(
+      `
+      SELECT users.id as "userID", users.username as "username" FROM users
+      INNER JOIN study_group_admins
+      ON users.id = study_group_admins.user_id
+      INNER JOIN study_groups 
+      ON study_groups.id = study_group_admins.study_group_id
+      WHERE study_groups.id = $1
+    `,
+      [studyGroupId]
+    );
+
     res.json({ authenticated: true, body: result.rows });
     client.release();
   })
@@ -179,17 +216,47 @@ router
     res.json({ authenticated: true, body: result.rows });
     client.release();
   })
+  .post("/leave", async (req: Request, res: Response) => {
+    const { studyGroupId, userId } = req.body;
+    const client = await pool.connect();
+
+    const result = await client.query(
+      `
+      DELETE FROM study_group_members
+      WHERE study_group_id = $1 AND user_id = $2
+    `,
+      [studyGroupId, userId]
+    );
+
+    res.json({ authenticated: true, body: [] });
+    client.release();
+  })
+  .post("/join", async (req: Request, res: Response) => {
+    const { studyGroupId, userId } = req.body;
+    const client = await pool.connect();
+
+    const result = await client.query(
+      `
+      INSERT INTO study_group_members (study_group_id, user_id)
+      VALUES ($1, $2)
+    `,
+      [studyGroupId, userId]
+    );
+
+    res.json({ authenticated: true, body: [] });
+    client.release();
+  })
   .get("/:id", async (req: Request, res: Response) => {
     const id = req.params.id;
 
     const client = await pool.connect();
     const result = await client.query(
       `
-    SELECT study_groups.name FROM study_groups WHERE study_groups.id = $1
+    SELECT study_groups.name, study_groups.description  FROM study_groups WHERE study_groups.id = $1
     `,
       [id]
     );
-    res.json({ authenticated: true, body: result.rows[0].name });
+    res.json({ authenticated: true, body: result.rows });
     client.release();
   });
 

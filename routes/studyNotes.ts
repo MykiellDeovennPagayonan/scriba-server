@@ -105,9 +105,9 @@ router
 
     const client = await pool.connect()
     const result = await client.query(`
-    SELECT study_notes.title FROM study_notes WHERE study_notes.id = $1
+    SELECT study_notes.title, study_notes.is_public as "isPublic" FROM study_notes WHERE study_notes.id = $1
     `, [id]);
-    res.json({ authenticated: true, body: result.rows[0].title });
+    res.json({ authenticated: true, body: result.rows });
     client.release()
   })
 
