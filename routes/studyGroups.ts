@@ -112,10 +112,13 @@ router
     const result = await client.query(`
     INSERT INTO shared_notes (study_group_id, study_note_Id)
     VALUES ($1, $2)
+    RETURNING id
     `, [ studyGroupId, studyNoteId ]
     )
+
+    const id = result.rows[0].id
     
-    res.json({ authenticated: true, body: "yessss" });
+    res.json({ authenticated: true, body: id });
     client.release()
   })
   .delete("/shared-notes/delete", async (req: Request, res: Response) => {
@@ -129,8 +132,9 @@ router
     WHERE id = $1
     `, [ sharedNoteID ]
     )
+
     
-    res.json({ authenticated: true, body: result.rows });
+    res.json({ authenticated: true, body: null });
     client.release()
   })
   .post("/shared-notes/:id", async (req: Request, res: Response) => {
@@ -151,8 +155,17 @@ router
     `, [ userId, studyGroupId ]
     )
 
-    console.log(result.rows)
     res.json({ authenticated: true, body: result.rows });
+    client.release()
+  })
+  .get("/:id", async (req: Request, res: Response) => {
+    const id = req.params.id;
+
+    const client = await pool.connect()
+    const result = await client.query(`
+    SELECT study_groups.name FROM study_groups WHERE study_groups.id = $1
+    `, [id]);
+    res.json({ authenticated: true, body: result.rows[0].name });
     client.release()
   })
 
