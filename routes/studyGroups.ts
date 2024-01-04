@@ -185,11 +185,11 @@ router
     const client = await pool.connect();
     const result = await client.query(
       `
-    SELECT study_groups.name FROM study_groups WHERE study_groups.id = $1
+    SELECT study_groups FROM study_groups WHERE study_groups.id = $1
     `,
       [id]
     );
-    res.json({ authenticated: true, body: result.rows[0].name });
+    res.json({ authenticated: true, body: result.rows });
     client.release();
   });
 
