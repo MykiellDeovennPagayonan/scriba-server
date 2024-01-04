@@ -28,7 +28,7 @@ router
 
     try {
       const client = await pool.connect()
-      const id = await client.query(
+      const result = await client.query(
         `
         INSERT INTO study_notes (user_id, date_published, title, is_public, study_notes_edited_date)
         VALUES ($1, NOW(), $2, $3, NOW())
@@ -37,7 +37,7 @@ router
         [userId, title, isPublic]
       );
 
-      const studyNoteID = id.rows[0].id;
+      const studyNoteID = result.rows[0].id;
 
       let queryValuesHolder = "";
       let queryValues: Array<number> = [];
