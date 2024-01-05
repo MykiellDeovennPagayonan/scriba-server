@@ -6,20 +6,17 @@ import requireAuth from "../middleware/authMiddleware";
 
 router
   .get("/", requireAuth, async (req: Request, res: Response) => {
-    const client = await pool.connect()
-    const result = await client.query(`
-    SELECT topics.name, topics.id from topics
-    `);
-    res.json({ authenticated: true, body: result.rows });
-    client.release()
-  })
-  .get("/burgers", async (req: Request, res: Response) => {
-    const client = await pool.connect()
-    const result = await client.query(`
-    SELECT topics.name, topics.id from topics
-    `);
-    res.json({ authenticated: true, body: "I love burgers" });
-    client.release()
+    try {
+      const client = await pool.connect();
+      const result = await client.query(`
+        SELECT topics.name, topics.id from topics
+      `);
+      res.json({ body: result.rows })
+      client.release()
+    } catch (error) {
+      console.error("Error handling protected route:", error)
+      res.status(500).json({ error: "Internal Server Error" })
+    }
   })
 
 

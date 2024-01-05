@@ -7,7 +7,6 @@ import requireAuth from "../../middleware/authMiddleware";
 router
   .post("/:id", requireAuth, async (req: Request, res: Response) => {
     const { sentences } = req.body;
-
     const studyNoteId = req.params.id;
 
     let queryValuesHolder = "";
@@ -27,39 +26,49 @@ router
       }
     }
 
-    const client = await pool.connect()
-    await client.query(
-      `
-      DELETE FROM sentences
-      WHERE sentences.study_note_id = $1::integer
-      `,
-      [studyNoteId]
-    );
+    try {
+      const client = await pool.connect();
+      await client.query(
+        `
+        DELETE FROM sentences
+        WHERE sentences.study_note_id = $1::integer
+        `,
+        [studyNoteId]
+      );
 
-    await client.query(
-      `
-      INSERT INTO sentences (id, text, type, study_note_id)
-      VALUES ${queryValuesHolder}
-      `,
-      queryValues
-    );
+      await client.query(
+        `
+        INSERT INTO sentences (id, text, type, study_note_id)
+        VALUES ${queryValuesHolder}
+        `,
+        queryValues
+      );
 
-    res.json({ authenticated: true, body: "Blehhh" });
-    client.release()
+      res.status(201).json({ body: [] });
+      client.release();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error, body: [] });
+    }
   })
   .get("/:id", async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    const client = await pool.connect()
-    const results = await client.query(
-      `
-      SELECT * from sentences WHERE sentences.study_note_id = $1
-      `,
-      [id]
-    );
+    try {
+      const client = await pool.connect();
+      const results = await client.query(
+        `
+        SELECT * from sentences WHERE sentences.study_note_id = $1
+        `,
+        [id]
+      );
 
-    res.json({ authenticated: true, body: results.rows });
-    client.release()
+      res.status(200).json({ body: results.rows });
+      client.release();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error, body: [] });
+    }
   });
 
 module.exports = router;
