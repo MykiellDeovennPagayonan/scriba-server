@@ -27,7 +27,7 @@ router
       `,
         [studyGroupId, userId]
       );
-      res.status(201).json({ body: [] });
+      res.status(201).json({ body: studyGroupId });
       client.release();
     } catch (error) {
       console.log(error);
