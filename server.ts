@@ -26,7 +26,10 @@ async function startServer() {
     .use("/api/auth", authRouther)
     .use("/api/study-groups", studyGroupRouter)
     .use("/api/study-notes", studyNotesRouter)
-    .listen(3001, () => {
+    .get("/test", async (req, res) => {
+      res.json({ message: "success" })
+    })
+    .listen(8080, () => {
       console.log("Server has started at http://localhost:3001");
     });
 }
