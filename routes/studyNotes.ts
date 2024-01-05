@@ -28,7 +28,7 @@ router
   .use("/notes", notesRouter)
   .use("/quizzes", quizzesRouter)
   .put("/update", async (req: Request, res: Response) => {
-    const { studyNoteId, currentTitle }: UpdateStudyNote = req.body();
+    const { studyNoteId, currentTitle }: UpdateStudyNote = req.body;
 
     try {
       const client = await pool.connect();
