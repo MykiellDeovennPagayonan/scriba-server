@@ -11,36 +11,36 @@ router
 
     try {
       const client = await pool.connect();
-      const response = await client.query(
-        `
-    SELECT * FROM users WHERE email = $1
-    `,
-        [email]
-      );
+      const response = await client.query(`
+        SELECT * FROM users WHERE email = $1
+        `, [email]
+      )
 
-      
       const user = response.rows[0];
 
       if (response.rows.length === 0 || !user) {
-        res.json({ message: "email or password is incorrect" });
-        client.release();
+        res.status(401).json({ message: "email or password is incorrect" });
+        client.release()
+        return
       }
 
       const userId = user.id;
 
-      const correctPassword = await compare(password, user.password);
+      const isPasswordCorrect = await compare(password, user.password);
 
-      if (!correctPassword) {
-        return res.json({ message: "email or password is incorrect" });
+      if (!isPasswordCorrect) {
+        res.status(401).json({ message: "email or password is incorrect" });
         client.release();
+        return
       }
 
       const token = generateAccessToken({ email, id: userId });
 
-      res.json({ token: token });
+      res.status(200).json({ body: { token: token } });
       client.release();
     } catch (error) {
-      console.log("Error:", error);
+      console.log(error);
+      res.status(500).json({ error, body: [] })
     }
   })
   .post("/register", async (req: Request, res: Response) => {
@@ -49,23 +49,21 @@ router
       const hashedPassword = await hash(password, 10);
       const client = await pool.connect();
 
-      const response = await client.query(
-        `
-      INSERT INTO users (username, email, password)
-      VALUES ($1, $2, $3)
-      RETURNING id
-      `,
-        [userName, email, hashedPassword]
+      const response = await client.query(`
+        INSERT INTO users (username, email, password)
+        VALUES ($1, $2, $3)
+        RETURNING id
+        `, [userName, email, hashedPassword]
       );
 
       const userId = response.rows[0].id;
 
       const token = generateAccessToken({ email, id: userId });
-      res.json({ token: token });
+      res.status(201).json({ body : {token: token} });
       client.release();
     } catch (error) {
-      console.log("Error:", error);
-      res.json({ message: "failure", error: error });
+      console.log(error);
+      res.status(500).json({ message: "failed to register", error: error });
     }
   });
 

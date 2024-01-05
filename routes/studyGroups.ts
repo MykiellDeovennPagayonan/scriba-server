@@ -3,8 +3,6 @@ const router = express.Router();
 import { Response, Request, NextFunction } from "express";
 import { pool } from "../server";
 
-// router.all('/api/*', requireAuthentication)
-
 router
   .use(logger)
   .post("/new", async (req: Request, res: Response) => {

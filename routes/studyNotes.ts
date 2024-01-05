@@ -4,8 +4,8 @@ import { Response, Request } from "express";
 import { pool } from "../server";
 import requireAuth from "../middleware/authMiddleware";
 
-const notesRouter = require('./study-notes/notes')
-const quizzesRouter = require('./study-notes/quizzes')
+const notesRouter = require("./study-notes/notes");
+const quizzesRouter = require("./study-notes/quizzes");
 
 interface Topic {
   name: string;
@@ -22,12 +22,12 @@ interface CreateStudyNoteRequest {
 router
   .use("/notes", notesRouter)
   .use("/quizzes", quizzesRouter)
-  .post("/new", async (req: Request, res: Response) => {
+  .post("/new", requireAuth, async (req: Request, res: Response) => {
     const { userId, title, topics, isPublic }: CreateStudyNoteRequest =
       req.body;
 
     try {
-      const client = await pool.connect()
+      const client = await pool.connect();
       const result = await client.query(
         `
         INSERT INTO study_notes (user_id, date_published, title, is_public, study_notes_edited_date)
@@ -61,54 +61,77 @@ router
         queryValues
       );
 
-      res.json({ authenticated: true, body: studyNoteID });
-      client.release()
+      res.status(201).json({ body: studyNoteID });
+      client.release();
     } catch (error) {
-      console.log("Error:", error);
+      console.log(error);
+      res.status(500).json({ error, body: [] });
     }
   })
-  .delete("/delete", async (req: Request, res: Response) => {
-    const { id: studyNoteID } = req.body
-    const client = await pool.connect()
+  .delete("/delete", requireAuth, async (req: Request, res: Response) => {
+    const { id: studyNoteID } = req.body;
+    try {
+      const client = await pool.connect();
 
-    console.log(studyNoteID)
+      const result = await client.query(
+        `
+        DELETE FROM study_notes
+        WHERE id = $1
+      `,
+        [studyNoteID]
+      );
 
-    const result = await client.query(`
-    DELETE FROM study_notes
-    WHERE id = $1
-    `, [ studyNoteID ]
-    )
-    
-    res.json({ authenticated: true, body: result.rows });
-    client.release()
+      res.status(204).json({ authenticated: true, body: result });
+      client.release();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error, body: [] });
+    }
   })
-  .post("/", async (req: Request, res: Response) => {
-    const { userId } = req.body
-    const client = await pool.connect()
+  .post("/", requireAuth, async (req: Request, res: Response) => {
+    const { userId } = req.body;
 
-    const result = await client.query(`
-    SELECT study_notes.title, topics.name as "topicName", study_notes.id as "studyNoteId"
-    from users
-    INNER JOIN study_notes
-    ON users.id = study_notes.user_id
-    INNER JOIN study_note_topics
-    ON study_notes.id = study_note_topics.study_notes_id
-    INNER JOIN topics ON study_note_topics.topic_id = topics.id
-    WHERE users.id = $1
-    `, [ userId ]
-    );
-    res.json({ authenticated: true, body: result.rows });
-    client.release()
+    try {
+      const client = await pool.connect();
+
+      const result = await client.query(
+        `
+        SELECT study_notes.title, topics.name as "topicName", study_notes.id as "studyNoteId"
+        from users
+        INNER JOIN study_notes
+        ON users.id = study_notes.user_id
+        INNER JOIN study_note_topics
+        ON study_notes.id = study_note_topics.study_notes_id
+        INNER JOIN topics ON study_note_topics.topic_id = topics.id
+        WHERE users.id = $1
+      `,
+        [userId]
+      );
+      res.status(200).json({ body: result.rows });
+      client.release();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error, body: [] });
+    }
   })
-  .get("/:id", async (req: Request, res: Response) => {
+  .get("/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    const client = await pool.connect()
-    const result = await client.query(`
-    SELECT study_notes.title, study_notes.is_public as "isPublic" FROM study_notes WHERE study_notes.id = $1
-    `, [id]);
-    res.json({ authenticated: true, body: result.rows });
-    client.release()
-  })
+    try {
+      const client = await pool.connect();
+      const result = await client.query(
+        `
+      SELECT study_notes.title, study_notes.is_public as "isPublic" FROM study_notes WHERE study_notes.id = $1
+      `,
+        [id]
+      );
+      res.json({ authenticated: true, body: result.rows });
+      client.release();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error, body: [] });
+    }
+
+  });
 
 module.exports = router;
