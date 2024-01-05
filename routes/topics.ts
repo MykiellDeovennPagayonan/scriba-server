@@ -11,12 +11,15 @@ router
       const result = await client.query(`
         SELECT topics.name, topics.id from topics
       `);
-      res.json({ body: result.rows })
+      res.status(200).json({ body: result.rows })
       client.release()
     } catch (error) {
       console.error("Error handling protected route:", error)
       res.status(500).json({ error: "Internal Server Error" })
     }
+  })
+  .get("/test", requireAuth, async (req: Request, res: Response) => {
+    res.json({ message: "success" })
   })
 
 
