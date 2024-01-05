@@ -1,5 +1,15 @@
 ## Scriba Server Development
 
+## Table of Contents
+
+[References](#references)
+
+[Before Starting](#before-you-start)
+
+[Environmental Variables](#env-variables)
+
+[Important Step](#important-step)
+
 
 ### References
 
@@ -18,7 +28,7 @@ This is important!
 npm install 
 ```
 
-### .env variables
+### env variables
 ```
 JWT_ACCESS_SECRET="YourSecret"
 
@@ -29,7 +39,7 @@ DATABASE_URL="postgres://postgres:my_password@localhost:5432/scriba-development?
 ```
 
 Ask for the .env files from scrum master as they are needed for you to continue this step.
-### Important Step! 
+### Important Step
 For starter:
 This commands are needed to start your development
 
