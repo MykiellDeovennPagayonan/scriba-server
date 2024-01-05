@@ -30,7 +30,7 @@ async function startServer() {
       res.json({ message: "success" })
     })
     .listen(8080, () => {
-      console.log("Server has started at http://localhost:3001");
+      console.log("Server has started at PORT 8080");
     });
 }
 
