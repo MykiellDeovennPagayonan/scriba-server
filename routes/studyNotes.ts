@@ -19,9 +19,35 @@ interface CreateStudyNoteRequest {
   isPublic: boolean;
 }
 
+interface UpdateStudyNote {
+  studyNoteId: number;
+  currentTitle: string;
+}
+
 router
   .use("/notes", notesRouter)
   .use("/quizzes", quizzesRouter)
+  .put("/update", async (req: Request, res: Response) => {
+    const { studyNoteId, currentTitle }: UpdateStudyNote = req.body();
+
+    try {
+      const client = await pool.connect();
+      const result = await client.query(
+        `
+        UPDATE study_notes
+        SET title = $1
+        WHERE id = $2
+        `,
+        [currentTitle, studyNoteId]
+      );
+
+      res.status(200).json({ body: result.rows });
+      client.release();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error, body: [] });
+    }
+  })
   .post("/new", requireAuth, async (req: Request, res: Response) => {
     const { userId, title, topics, isPublic }: CreateStudyNoteRequest =
       req.body;
@@ -131,7 +157,6 @@ router
       console.log(error);
       res.status(500).json({ error, body: [] });
     }
-
   });
 
 module.exports = router;
