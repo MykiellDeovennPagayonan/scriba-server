@@ -2,10 +2,11 @@ import express from "express";
 const router = express.Router();
 import { Response, Request, NextFunction } from "express";
 import { pool } from "../server";
+import requireAuth from "../middleware/authMiddleware";
 
 router
   .use(logger)
-  .post("/new", async (req: Request, res: Response) => {
+  .post("/new", requireAuth, async (req: Request, res: Response) => {
     const { studyGroupName, studyGroupDescription, userId } = req.body;
 
     try {
@@ -46,7 +47,7 @@ router
   //     res.status(500).json({ error, body : [] })
   //   }
   // })
-  .post("/", async (req: Request, res: Response) => {
+  .post("/", requireAuth, async (req: Request, res: Response) => {
     const { userId } = req.body;
 
     try {
@@ -72,7 +73,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .post("/study-notes", async (req: Request, res: Response) => {
+  .post("/study-notes", requireAuth, async (req: Request, res: Response) => {
     const { userId } = req.body;
 
     try {
@@ -96,7 +97,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .get("/study-notes/:id", async (req: Request, res: Response) => {
+  .get("/study-notes/:id", requireAuth, async (req: Request, res: Response) => {
     const studyGroupId = req.params.id;
 
     try {
@@ -132,7 +133,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .get("/members/:id", async (req: Request, res: Response) => {
+  .get("/members/:id", requireAuth, async (req: Request, res: Response) => {
     const studyGroupId = req.params.id;
 
     try {
@@ -157,7 +158,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .get("/admins/:id", async (req: Request, res: Response) => {
+  .get("/admins/:id", requireAuth, async (req: Request, res: Response) => {
     const studyGroupId = req.params.id;
 
     try {
@@ -182,7 +183,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .post("/shared-notes/new", async (req: Request, res: Response) => {
+  .post("/shared-notes/new", requireAuth, async (req: Request, res: Response) => {
     const { studyGroupId, studyNoteId } = req.body;
 
     try {
@@ -206,7 +207,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .delete("/shared-notes/delete", async (req: Request, res: Response) => {
+  .delete("/shared-notes/delete", requireAuth, async (req: Request, res: Response) => {
     const { id: sharedNoteID } = req.body;
 
     try {
@@ -229,7 +230,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .post("/shared-notes/:id", async (req: Request, res: Response) => {
+  .post("/shared-notes/:id", requireAuth, async (req: Request, res: Response) => {
     const { userId } = req.body;
     const studyGroupId = req.params.id;
 
@@ -258,7 +259,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .delete("/leave", async (req: Request, res: Response) => {
+  .delete("/leave", requireAuth, async (req: Request, res: Response) => {
     const { studyGroupId, userId } = req.body;
     try {
       const client = await pool.connect();
@@ -278,7 +279,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .post("/join", async (req: Request, res: Response) => {
+  .post("/join", requireAuth, async (req: Request, res: Response) => {
     const { studyGroupId, userId } = req.body;
     const client = await pool.connect();
 
@@ -298,7 +299,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .get("/:id", async (req: Request, res: Response) => {
+  .get("/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
 
     try {

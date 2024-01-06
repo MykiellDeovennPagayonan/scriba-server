@@ -49,7 +49,17 @@ router
       const hashedPassword = await hash(password, 10);
       const client = await pool.connect();
 
-      const response = await client.query(`
+      let response = await client.query(`
+      SELECT * FROM users WHERE email = $1
+      `, [email]
+      )
+
+      if (response.rows.length > 0) {
+        res.status(409).json({ body : [], message: "account with email already exists" });
+        return
+      }
+
+      response = await client.query(`
         INSERT INTO users (username, email, password)
         VALUES ($1, $2, $3)
         RETURNING id

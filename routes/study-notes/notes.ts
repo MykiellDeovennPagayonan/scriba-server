@@ -111,7 +111,7 @@ router
       res.status(500).json({ error, body: [] });
     }
   })
-  .get("/:id", async (req: Request, res: Response) => {
+  .get("/:id", requireAuth, async (req: Request, res: Response) => {
     const id = req.params.id;
 
     try {
